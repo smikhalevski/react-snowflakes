@@ -164,7 +164,7 @@ export default class Snowflakes extends React.Component {
                zIndex: 1000,
                opacity: 0
              }}>
-          *
+          {this.props.snowflakeChar}
         </div>
       </div>
     );
