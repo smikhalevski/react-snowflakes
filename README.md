@@ -1,14 +1,55 @@
-# react-snowflakes
+# React Snowflakes
 
-Let it snow on your React website!
+![Frank Sinatra](sinatra.png)
+
+> “Let it snow on your React website!” – Frank Sinatra<sup><a href="https://www.youtube.com/watch?v=aQzlJRjXSGY">1</a></sup>
+
+## How to use?
 
 ```jsx
-import Snowflakes from 'react-snowflakes';
+import {DepthOfFieldSnowfall} from 'react-snowflakes';
 
 // Insert anywhere in your code and that's it!
-<Snowflakes numberOfSnowflakes={50}
-            snowflakeColor="rgba(0,0,0,.2)"
-            snowflakeChar="*"/>
+<DepthOfFieldSnowfall count={50}
+                      style={{
+                        // Position must be relative or absolute,
+                        // because snowflakes are positioned absolutely.
+                        position: 'relative',
+                        width: '300px',
+                        height: '300px'
+                      }}/>
 ```
 
-Snow is falling thanks to [this guy](https://www.kirupa.com/html5/the_falling_snow_effect.htm).
+You can have more control over snowflakes with `Snowfall`:
+
+```jsx
+import {Snowfall, Snowflake} from 'react-snowflakes';
+
+<Snowfall count={50}
+          style={{
+            position: 'relative',
+            width: '300px',
+            height: '300px'
+          }}
+          snowflakeFactory={index => {
+            const size = index / count;
+            const w = 5 + 10 * size + 'px';
+            return (
+              <Snowflake speed={.05 + size * 2}
+                         xSpeedPrc={.3 * size}
+                         ySpeedPrc={.1 * size}
+                         style={{
+                           width: w,
+                           height: w,
+                           borderRadius: '50%',
+                           backgroundColor: 'white',
+                           opacity: .2 + .8 * size,
+                           filter: `blur(${Math.round(Math.max(size - .5, 0) * 15)}px)`
+                         }}/>
+            )
+          }}/>
+```
+
+## License
+
+The code is available under [MIT licence](LICENSE).

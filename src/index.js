@@ -1,172 +1,153 @@
 import React from 'react';
+import {number, func} from 'prop-types';
 
-const {number, string} = React.PropTypes;
+export function DepthOfFieldSnowfall({count = 50, ...props}) {
+  return (
+    <Snowfall {...props}
+              count={count}
+              snowflakeFactory={index => {
+                const size = index / count;
+                const w = 5 + 10 * size + 'px';
+                return (
+                  <Snowflake speed={.05 + size * 2}
+                             xSpeedPrc={.3 * size}
+                             ySpeedPrc={.1 * size}
+                             style={{
+                               width: w,
+                               height: w,
+                               borderRadius: '50%',
+                               backgroundColor: 'currentColor',
+                               opacity: .2 + .8 * size,
+                               filter: `blur(${Math.round(Math.max(size - .5, 0) * 15)}px)`
+                             }}/>
+                )
+              }}/>
+  );
+}
 
-export default class Snowflakes extends React.Component {
+export class Snowflake extends React.Component {
 
   static propTypes = {
-    numberOfSnowflakes: number,
-    snowflakeColor: string,
-    snowflakeChar: string
+    speed: number,
+    xSpeedPrc: number,
+    ySpeedPrc: number,
+    timeFactor: number,
   };
 
   static defaultProps = {
-    numberOfSnowflakes: 50,
-    snowflakeColor: 'rgba(0,0,0,.2)',
-    snowflakeChar: '*'
+    speed: .02 + Math.random() * 3,
+    xSpeedPrc: .3,
+    ySpeedPrc: .1,
+    timeFactor: 1e3
   };
 
-  componentDidMount() {
-    const requestAnimationFrame = window.requestAnimationFrame ||
-                                  window.mozRequestAnimationFrame ||
-                                  window.webkitRequestAnimationFrame ||
-                                  window.msRequestAnimationFrame;
+  node;
+  x;
+  y = 1 / 0;
+  sign = Math.random() - 1;
 
-    var snowflakes = [];
+  setNode = node => this.node = node;
 
-    var browserWidth;
-    var browserHeight;
-
-    var numberOfSnowflakes = this.props.numberOfSnowflakes;
-
-    var resetPosition = false;
-
-    function Snowflake(element, radius, speed, xPos, yPos) {
-
-      // set initial snowflake properties
-      this.element = element;
-      this.radius = radius;
-      this.speed = speed;
-      this.xPos = xPos;
-      this.yPos = yPos;
-
-      // declare variables used for snowflake's motion
-      this.counter = 0;
-      this.sign = Math.random() < 0.5 ? 1 : -1;
-
-      // setting an initial opacity and size for our snowflake
-      this.element.style.opacity = .1 + Math.random();
-      this.element.style.fontSize = 12 + Math.random() * 50 + 'px';
+  animate(time, vw, vh) {
+    const {speed, xSpeedPrc, ySpeedPrc, timeFactor} = this.props;
+    if (time === 0) {
+      this.x = Math.random() * vw;
+      this.y = Math.random() * vh;
     }
-
-    Snowflake.prototype.update = function () {
-
-      // using some trigonometry to determine our x and y position
-      this.counter += this.speed / 5000;
-      this.xPos += this.sign * this.speed * Math.cos(this.counter) / 40;
-      this.yPos += Math.sin(this.counter) / 40 + this.speed / 30;
-
-      // setting our snowflake's position
-      setTranslate3DTransform(this.element, Math.round(this.xPos), Math.round(this.yPos));
-
-      // if snowflake goes below the browser window, move it back to the top
-      if (this.yPos > browserHeight) {
-        this.yPos = -50;
-      }
-    };
-
-    function setTranslate3DTransform(element, xPosition, yPosition) {
-      element.style.left = xPosition + 'px';
-      element.style.top = yPosition + 'px';
+    if (this.y > vh) {
+      this.x = Math.random() * vw;
+      this.y = -this.node.offsetHeight;
+    } else {
+      this.x += this.sign * speed * xSpeedPrc * Math.cos(time / timeFactor);
+      this.y += speed     + speed * ySpeedPrc * Math.sin(time / timeFactor);
     }
-
-    const generateSnowflakes = () => {
-
-      // get our snowflake element from the DOM and store it
-      const originalSnowflake = this.refs.snowflake;
-
-      // access our snowflake element's parent container
-      const snowflakeContainer = originalSnowflake.parentNode;
-
-      // get our browser's size
-      browserWidth = document.documentElement.clientWidth;
-      browserHeight = document.documentElement.clientHeight;
-
-      // create each individual snowflake
-      for (let i = 0; i < numberOfSnowflakes; i++) {
-
-        // clone our original snowflake and add it to snowflakeContainer
-        const snowflakeCopy = originalSnowflake.cloneNode(true);
-        snowflakeContainer.appendChild(snowflakeCopy);
-
-        // set our snowflake's initial position and related properties
-        const initialXPos = getPosition(50, browserWidth);
-        const initialYPos = getPosition(50, browserHeight);
-        const speed = 5 + Math.random() * 40;
-        const radius = 4 + Math.random() * 10;
-
-        // create our Snowflake object
-        snowflakes.push(new Snowflake(snowflakeCopy,
-          radius,
-          speed,
-          initialXPos,
-          initialYPos));
-      }
-
-      // remove the original snowflake because we no longer need it visible
-      snowflakeContainer.removeChild(originalSnowflake);
-
-      // call the moveSnowflakes function every 30 milliseconds
-      moveSnowflakes();
-    };
-
-    function moveSnowflakes() {
-      for (let i = 0; i < snowflakes.length; i++) {
-        snowflakes[i].update();
-      }
-
-      // Reset the position of all the snowflakes to a new value
-      if (resetPosition) {
-        browserWidth = document.documentElement.clientWidth;
-        browserHeight = document.documentElement.clientHeight;
-
-        for (let i = 0; i < snowflakes.length; i++) {
-          const snowflake = snowflakes[i];
-
-          snowflake.xPos = getPosition(50, browserWidth);
-          snowflake.yPos = getPosition(50, browserHeight);
-        }
-
-        resetPosition = false;
-      }
-
-      requestAnimationFrame(moveSnowflakes);
-    }
-
-    function getPosition(offset, size) {
-      return Math.round(-1 * offset + Math.random() * (size + 2 * offset));
-    }
-
-    function setResetFlag(e) {
-      resetPosition = true;
-    }
-
-    generateSnowflakes();
-    window.addEventListener('resize', setResetFlag, false);
+    this.node.style.transform = `translate(${this.x}px, ${this.y}px)`;
   }
+
+  render() {
+    const {style, children, speed, xSpeedPrc, ySpeedPrc, timeFactor, ...props} = this.props;
+    return (
+      <div {...props}
+           ref={this.setNode}
+           style={{
+             pointerEvents: 'none',
+             ...style,
+             position: 'absolute',
+             top: 0,
+             left: 0
+           }}>
+        {children}
+      </div>
+    );
+  }
+}
+
+export class Snowfall extends React.Component {
+
+  static propTypes = {
+    count: number,
+    snowflakeFactory: func
+  };
+
+  static defaultProps = {
+    count: 50,
+    snowflakeFactory: i => <Snowflake/>
+  };
+
+  state = {
+    renderPermitted: false
+  };
+
+  node;
+  snowflakes = [];
+  animationFrame;
+
+  pushSnowflake = snowflake => this.snowflakes.push(snowflake);
+  setNode = node => this.node = node;
+
+  componentDidMount() {
+    this.setState({renderPermitted: true});
+    this.forceUpdate(this.startAnimation);
+  }
+
+  componentWillUnmount() {
+    this.stopAnimation();
+  }
+
+  animateSnowfall = (time = Date.now()) => {
+    this.animationFrame = requestAnimationFrame(this.animateSnowfall);
+    if (this.snowflakes.length > 0) {
+      const {offsetWidth, offsetHeight} = this.node;
+      this.snowflakes.forEach(snowflake =>
+        snowflake.animate(time, offsetWidth, offsetHeight)
+      );
+    }
+  };
+
+  startAnimation = () => this.animateSnowfall(0);
+  stopAnimation = () => cancelAnimationFrame(this.animationFrame);
 
   shouldComponentUpdate() {
     return false;
   }
 
   render() {
-    return (
-      <div style={{position: 'absolute', left: 0, top: 0}}>
-        <div ref="snowflake"
-             style={{
-               paddingLeft: '15px',
-               fontFamily: 'Cambria, Georgia, serif',
-               fontSize: '14px',
-               lineHeight: '24px',
-               position: 'fixed',
-               color: this.props.snowflakeColor,
-               userSelect: 'none',
-               zIndex: 1000,
-               opacity: 0
-             }}>
-          {this.props.snowflakeChar}
+    const {snowflakeFactory, count, ...props} = this.props;
+    if (this.state.renderPermitted) {
+      this.snowflakes = [];
+      const snowflakeElements = [];
+      for (let i = 0; i < count; ++i) {
+        snowflakeElements.push(React.cloneElement(snowflakeFactory(i), {
+          key: i,
+          ref: this.pushSnowflake
+        }));
+      }
+      return (
+        <div {...props} ref={this.setNode}>
+          {snowflakeElements}
         </div>
-      </div>
-    );
+      );
+    }
+    return null;
   }
 }
