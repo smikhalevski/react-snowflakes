@@ -32,7 +32,7 @@ import {Snowfall, Snowflake} from 'react-snowflakes';
             height: '300px'
           }}
           snowflakeFactory={index => {
-            const size = index / count;
+            const size = index / 50; // 50 is the number of snowflakes.
             const w = 5 + 10 * size + 'px';
             return (
               <Snowflake speed={.05 + size * 2}
